@@ -1,0 +1,27 @@
+[project]
+name = "plantclef"
+version = "0.1.1"
+authors = [{ name = "Murilo Gustineli", email = "murilogustineli@gatech.edu" }]
+description = "PyTorch PlantCLEF webinar helper package"
+readme = "README.md"
+requires-python = ">=3.8"
+dynamic = ["dependencies"]
+
+[project.urls]
+Homepage = "https://github.com/murilogustineli/pytorch-plantclef"
+Issues = "https://github.com/murilogustineli/pytorch-plantclef/issues"
+
+[project.scripts]
+plantclef = "plantclef.cli:app"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+dependencies = { file = "requirements.txt" }
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["plantclef*"]
+namespaces = false
