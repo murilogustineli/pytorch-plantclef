@@ -2,13 +2,15 @@ numpy==1.26.4
 pandas==2.2.3
 matplotlib==3.10.1
 scikit-learn==1.6.1
+pyarrow==19.0.1
 torch==2.6.0
 timm==1.0.15
 transformers==4.49.0
 typer==0.15.2
 opencv-python==4.11.0.86
 scikit-image==0.25.2
-faiss-gpu==1.7.2
+# faiss-gpu==1.7.2
+faiss-cpu==1.10.0
 
 # developer tools
 jupyterlab==4.3.5
