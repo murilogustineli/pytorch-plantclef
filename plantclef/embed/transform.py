@@ -40,7 +40,7 @@ class DINOv2LightningModel(pl.LightningModule):
         model_name="vit_base_patch14_reg4_dinov2.lvd142m",
     ):
         super().__init__()
-        self.device_type = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.num_classes = 7806  # Total plant species
 
         # Load the fine-tuned model
@@ -58,13 +58,13 @@ class DINOv2LightningModel(pl.LightningModule):
         )
 
         # Move model to device
-        self.model.to(self.device_type)
+        self.model.to(self.device)
         self.model.eval()
 
     def forward(self, batch):
         """Extract embeddings using the [CLS] token."""
         with torch.no_grad():
-            batch = batch.to(self.device_type)
+            batch = batch.to(self.device)
             features = self.model.forward_features(batch)
             return features[:, 0, :]  # Extract CLS token
 
