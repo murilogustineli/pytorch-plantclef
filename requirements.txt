@@ -13,6 +13,7 @@ opencv-python==4.11.0.86
 scikit-image==0.25.2
 # faiss-gpu==1.7.2
 faiss-cpu==1.10.0
+tqdm==4.67.1
 
 # developer tools
 jupyterlab==4.3.5
