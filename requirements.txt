@@ -4,6 +4,8 @@ matplotlib==3.10.1
 scikit-learn==1.6.1
 pyarrow==19.0.1
 torch==2.6.0
+torchvision==0.21.0
+pytorch-lightning==2.5.0.post0
 timm==1.0.15
 transformers==4.49.0
 typer==0.15.2
