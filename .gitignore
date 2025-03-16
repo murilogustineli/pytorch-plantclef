@@ -168,6 +168,7 @@ cython_debug/
 logs/
 
 # data files
-*_SUCCESS
-*.crc
-*.parquet
+*subset_top5_train/
+
+# model files
+*model/
