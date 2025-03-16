@@ -28,7 +28,7 @@ class PlantDataset(Dataset):
 
     def __getitem__(self, idx):
         img_bytes = self.df.iloc[idx]["data"]
-        img = Image.open(io.BytesIO(img_bytes)).convert("RGB")  # Convert to RGB
+        img = Image.open(io.BytesIO(img_bytes)).convert("RGB")  # convert to RGB
         if self.transform:
             img = self.transform(img)
         return img
@@ -44,7 +44,7 @@ class DINOv2LightningModel(pl.LightningModule):
     ):
         super().__init__()
         self.model_device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.num_classes = 7806  # Total plant species
+        self.num_classes = 7806  # total plant species
 
         # load the fine-tuned model
         self.model = timm.create_model(
@@ -69,7 +69,7 @@ class DINOv2LightningModel(pl.LightningModule):
         with torch.no_grad():
             batch = batch.to(self.model_device)
             features = self.model.forward_features(batch)
-            return features[:, 0, :]  # Extract [CLS] token
+            return features[:, 0, :]  # extract [CLS] token
 
 
 def extract_embeddings(
@@ -78,19 +78,19 @@ def extract_embeddings(
 ) -> np.ndarray:
     """Extract embeddings for images in a Pandas DataFrame using PyTorch Lightning."""
 
-    # Initialize model
+    # initialize model
     model = DINOv2LightningModel()
 
-    # Create Dataset and DataLoader
+    # create Dataset and DataLoader
     dataset = PlantDataset(train_df, model.transform)
     dataloader = DataLoader(
         dataset, batch_size=batch_size, shuffle=False, num_workers=4
     )
 
-    # Run inference and collect embeddings with tqdm progress bar
+    # run inference and collect embeddings with tqdm progress bar
     all_embeddings = []
     for batch in tqdm(dataloader, desc="Extracting embeddings", unit="batch"):
         embeddings = model(batch)
         all_embeddings.append(embeddings.cpu().numpy())
 
-    return np.vstack(all_embeddings)  # Combine all embeddings into a single array
+    return np.vstack(all_embeddings)  # combine all embeddings into a single array
