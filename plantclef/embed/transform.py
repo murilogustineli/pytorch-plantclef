@@ -1,13 +1,12 @@
-import io
 import timm
 import torch
 import numpy as np
 import pandas as pd
 import pytorch_lightning as pl
 
-from PIL import Image
 from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
+from plantclef.serde import deserialize_image
 from plantclef.model_setup import setup_fine_tuned_model
 
 
@@ -28,7 +27,7 @@ class PlantDataset(Dataset):
 
     def __getitem__(self, idx):
         img_bytes = self.df.iloc[idx]["data"]
-        img = Image.open(io.BytesIO(img_bytes)).convert("RGB")  # convert to RGB
+        img = deserialize_image(img_bytes)  # convert from bytes to PIL image
         if self.transform:
             img = self.transform(img)
         return img
