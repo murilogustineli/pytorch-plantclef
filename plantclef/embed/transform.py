@@ -42,7 +42,13 @@ class DINOv2LightningModel(pl.LightningModule):
         model_name="vit_base_patch14_reg4_dinov2.lvd142m",
     ):
         super().__init__()
-        self.model_device = "cuda" if torch.cuda.is_available() else "cpu"
+        if torch.xpu.is_available():
+            self.model_device = "xpu"
+        elif torch.cuda.is_available():
+            self.model_device = "cuda"
+        else:
+            self.model_device = "cpu"
+
         self.num_classes = 7806  # total plant species
 
         # load the fine-tuned model
