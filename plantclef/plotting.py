@@ -100,12 +100,12 @@ def plot_images_from_embeddings(
     rows, cols = grid_size
 
     # Collect binary image data from DataFrame
-    subset_df = df.limit(rows * cols).collect()
-    embedding_data_list = [row[data_col] for row in subset_df]
-    image_names = [row[label_col] for row in subset_df]
+    subset_df = df.head(rows * cols)
+    embedding_data_list = subset_df[data_col].tolist()
+    image_names = subset_df[label_col].tolist()
 
     # Create a matplotlib subplot with specified grid size
-    fig, axes = plt.subplots(rows, cols, figsize=(12, 12), dpi=dpi)
+    fig, axes = plt.subplots(rows, cols, figsize=figsize, dpi=dpi)
 
     # Flatten the axes array for easy iteration
     axes = axes.flatten() if isinstance(axes, np.ndarray) else [axes]
