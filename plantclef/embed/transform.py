@@ -72,7 +72,7 @@ class DINOv2LightningModel(pl.LightningModule):
 
 
 def extract_embeddings(
-    train_df: pd.DataFrame,
+    pandas_df: pd.DataFrame,
     batch_size: int = 32,
 ) -> np.ndarray:
     """Extract embeddings for images in a Pandas DataFrame using PyTorch Lightning."""
@@ -81,7 +81,7 @@ def extract_embeddings(
     model = DINOv2LightningModel()
 
     # create Dataset and DataLoader
-    dataset = PlantDataset(train_df, model.transform)
+    dataset = PlantDataset(pandas_df, model.transform)
     dataloader = DataLoader(
         dataset, batch_size=batch_size, shuffle=False, num_workers=4
     )
