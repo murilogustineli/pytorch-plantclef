@@ -4,6 +4,7 @@ import torch
 import numpy as np
 import pandas as pd
 import pytorch_lightning as pl
+
 from PIL import Image
 from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
@@ -11,13 +12,13 @@ from plantclef.model_setup import setup_fine_tuned_model
 
 
 class PlantDataset(Dataset):
-    """Custom PyTorch dataset for loading plant images from a Pandas DataFrame."""
+    """Custom PyTorch Dataset for loading plant images from a Pandas DataFrame."""
 
-    def __init__(self, df, transform):
+    def __init__(self, df, transform=None):
         """
         Args:
             df (pd.DataFrame): Pandas DataFrame containing image binary data.
-            transform (torchvision.transforms): Image transformations.
+            transform (torchvision.transforms.Compose): Image transformations.
         """
         self.df = df
         self.transform = transform
@@ -26,9 +27,11 @@ class PlantDataset(Dataset):
         return len(self.df)
 
     def __getitem__(self, idx):
-        img_bytes = self.df.iloc[idx]["image"]
+        img_bytes = self.df.iloc[idx]["data"]
         img = Image.open(io.BytesIO(img_bytes)).convert("RGB")  # Convert to RGB
-        return self.transform(img)
+        if self.transform:
+            img = self.transform(img)
+        return img
 
 
 class DINOv2LightningModel(pl.LightningModule):
@@ -40,10 +43,10 @@ class DINOv2LightningModel(pl.LightningModule):
         model_name="vit_base_patch14_reg4_dinov2.lvd142m",
     ):
         super().__init__()
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.model_device = "cuda" if torch.cuda.is_available() else "cpu"
         self.num_classes = 7806  # Total plant species
 
-        # Load the fine-tuned model
+        # load the fine-tuned model
         self.model = timm.create_model(
             model_name,
             pretrained=False,
@@ -51,22 +54,22 @@ class DINOv2LightningModel(pl.LightningModule):
             checkpoint_path=model_path,
         )
 
-        # Load transform
+        # load transform
         self.data_config = timm.data.resolve_model_data_config(self.model)
         self.transform = timm.data.create_transform(
             **self.data_config, is_training=False
         )
 
-        # Move model to device
-        self.model.to(self.device)
+        # move model to device
+        self.model.to(self.model_device)
         self.model.eval()
 
     def forward(self, batch):
         """Extract embeddings using the [CLS] token."""
         with torch.no_grad():
-            batch = batch.to(self.device)
+            batch = batch.to(self.model_device)
             features = self.model.forward_features(batch)
-            return features[:, 0, :]  # Extract CLS token
+            return features[:, 0, :]  # Extract [CLS] token
 
 
 def extract_embeddings(
