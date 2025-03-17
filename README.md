@@ -5,15 +5,17 @@ This is part of the [PlantCLEF @ LifeCLEF & CVPR-FGVC](https://www.kaggle.com/co
 
 ## Quickstart
 
+### 1. Clone the repository
+
 Clone the [**`pytorch-plantclef`**](https://github.com/murilogustineli/pytorch-plantclef) repo:
 
-- Using HTTPS (recommended when using Intel Tiber AI Cloud):
+Using HTTPS (recommended when using Intel Tiber AI Cloud):
 
 ```bash
 git clone https://github.com/murilogustineli/pytorch-plantclef.git
 ```
 
-- Using SSH:
+Using SSH:
 
 ```bash
 git clone git@github.com:murilogustineli/pytorch-plantclef.git
@@ -25,6 +27,8 @@ Navigate to the project directory:
 cd pytorch-plantclef
 ```
 
+### 2. Install `uv` (Package Manager)
+
 Install `uv` as the package manager for the project. Follow the `uv` [installation instructions](https://docs.astral.sh/uv/getting-started/installation/) for macOS, Linux, and Windows.
 
 If running on [Intel Tiber AI Cloud](https://ai.cloud.intel.com/), install `uv` as the following (also works for macOS and Linux):
@@ -33,17 +37,19 @@ If running on [Intel Tiber AI Cloud](https://ai.cloud.intel.com/), install `uv` 
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-Add it to PATH:
+Add it to `PATH`:
 
 ```bash
 source $HOME/.local/bin/env
 ```
 
-Check `uv` was installed correctly:
+Check `uv` installation:
 
 ```bash
 uv --version
 ```
+
+### 3. Create a Virtual Environment
 
 Create a virtual environment:
 
@@ -57,13 +63,24 @@ Activate the virtual environment:
 source venv/bin/activate
 ```
 
-Install the requirement packages to the `venv` virtual environment:
+### 4. Install Dependencies
+
+#### If running locally (macOS, Linux, Windows):
+
+Install all dependencies to the `venv` virtual environment:
 
 ```bash
 uv pip install -r requirements.txt
 ```
 
-Install the package in "editable" mode, which means changes to the Python files will be immediately available without needing to reinstall the package.
+#### If running on Intel Tiber AI Cloud:
+
+⚠️ **Do NOT install `torch` & `torchvision`** (Intel GPU versions are pre-installed).
+Use the ITAC-specific requirements file:
+
+### 5. Install the Project in Editable Mode
+
+Install the `plantclef` package in "editable" mode, which means changes to the Python files will be immediately available without needing to reinstall the package.
 
 ```bash
 uv pip install -e .
@@ -75,13 +92,15 @@ uv pip install -e .
 pre-commit install
 ```
 
-Download the dataset and fine-tuned ViT model:
+### 6. Download Dataset & Fine-Tuned ViT Model
 
 ```bash
 bash scripts/download_data_model.sh
 ```
 
-Test the environment by running the `pystest`:
+### 7. Run tests to verify setup
+
+After downloading the data and fine-tuned model, we can test the virtual environment by running the following `pystest`:
 
 ```bash
 pytest -vv -s tests/test_embed.py
