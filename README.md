@@ -1,6 +1,7 @@
 # pytorch-plantclef
 
 PyTorch webinar on using DINOv2 for plant species classification.
+This is part of the [PlantCLEF @ LifeCLEF & CVPR-FGVC](https://www.kaggle.com/competitions/plantclef-2025) competition on Kaggle.
 
 ## Quickstart
 
@@ -24,11 +25,9 @@ Navigate to the project directory:
 cd pytorch-plantclef
 ```
 
-Install `uv` as the package manager for the project:
+Install `uv` as the package manager for the project. Follow the `uv` [installation instructions](https://docs.astral.sh/uv/getting-started/installation/) for macOS, Linux, and Windows.
 
-- Follow the `uv` [installation instructions](https://docs.astral.sh/uv/getting-started/installation/) for macOS, Linux, and Windows.
-
-If running on Intel Tiber AI Cloud, install `uv` as the following:
+If running on [Intel Tiber AI Cloud](https://ai.cloud.intel.com/), install `uv` as the following (also works for macOS and Linux):
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -74,4 +73,16 @@ uv pip install -e .
 
 ```bash
 pre-commit install
+```
+
+Download the dataset and fine-tuned ViT model:
+
+```bash
+bash scripts/download_data_model.sh
+```
+
+Test the environment by running the `pystest`:
+
+```bash
+pytest -vv -s tests/test_embed.py
 ```
