@@ -9,13 +9,13 @@ This is part of the [PlantCLEF @ LifeCLEF & CVPR-FGVC](https://www.kaggle.com/co
 
 Clone the [**`pytorch-plantclef`**](https://github.com/murilogustineli/pytorch-plantclef) repo:
 
-Using HTTPS (recommended when using Intel Tiber AI Cloud):
+⚠️ **Using HTTPS** _(Recommended for Intel Tiber AI Cloud)_:
 
 ```bash
 git clone https://github.com/murilogustineli/pytorch-plantclef.git
 ```
 
-Using SSH:
+**Using SSH**:
 
 ```bash
 git clone git@github.com:murilogustineli/pytorch-plantclef.git
@@ -63,27 +63,25 @@ Activate the virtual environment:
 source venv/bin/activate
 ```
 
-### 4. Install Dependencies
+### 4. Install the Project in Editable Mode with Dependencies
+
+Install the `plantclef` package in _"editable"_ mode, which means changes to the Python files will be immediately available without needing to reinstall the package.
 
 #### If running locally (macOS, Linux, Windows):
 
-Install all dependencies to the `venv` virtual environment:
+Install all dependencies from `requirements.txt` to the `venv` virtual environment:
 
 ```bash
-uv pip install -r requirements.txt
+uv pip install -e .
 ```
 
-#### If running on Intel Tiber AI Cloud:
+#### If running on [Intel Tiber AI Cloud](https://ai.cloud.intel.com/):
 
 ⚠️ **Do NOT install `torch` & `torchvision`** (Intel GPU versions are pre-installed).
 Use the ITAC-specific requirements file:
 
-### 5. Install the Project in Editable Mode
-
-Install the `plantclef` package in "editable" mode, which means changes to the Python files will be immediately available without needing to reinstall the package.
-
 ```bash
-uv pip install -e .
+uv pip install -e .[itac]
 ```
 
 **[OPTIONAL]**: Install the pre-commit hooks for formatting code:
@@ -92,13 +90,13 @@ uv pip install -e .
 pre-commit install
 ```
 
-### 6. Download Dataset & Fine-Tuned ViT Model
+### 5. Download Dataset & Fine-Tuned ViT Model
 
 ```bash
 bash scripts/download_data_model.sh
 ```
 
-### 7. Run tests to verify setup
+### 6. Run tests to verify setup
 
 After downloading the data and fine-tuned model, we can test the virtual environment by running the following `pystest`:
 
