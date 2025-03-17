@@ -8,6 +8,7 @@ from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
 from plantclef.serde import deserialize_image
 from plantclef.model_setup import setup_fine_tuned_model
+from plantclef.config import get_device
 
 
 class PlantDataset(Dataset):
@@ -42,13 +43,7 @@ class DINOv2LightningModel(pl.LightningModule):
         model_name="vit_base_patch14_reg4_dinov2.lvd142m",
     ):
         super().__init__()
-        if torch.xpu.is_available():
-            self.model_device = "xpu"
-        elif torch.cuda.is_available():
-            self.model_device = "cuda"
-        else:
-            self.model_device = "cpu"
-
+        self.model_device = get_device()
         self.num_classes = 7806  # total plant species
 
         # load the fine-tuned model

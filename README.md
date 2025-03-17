@@ -1,36 +1,105 @@
 # pytorch-plantclef
-PyTorch webinar on using DINOv2 for plant species classification.
 
+PyTorch webinar on using DINOv2 for plant species classification.
+This is part of the [PlantCLEF @ LifeCLEF & CVPR-FGVC](https://www.kaggle.com/competitions/plantclef-2025) competition on Kaggle.
 
 ## Quickstart
 
-Install `uv` as the package manager for the project:
-- Follow the `uv` [installation instructions](https://docs.astral.sh/uv/getting-started/installation/).
+### 1. Clone the repository
+
+Clone the [**`pytorch-plantclef`**](https://github.com/murilogustineli/pytorch-plantclef) repo:
+
+⚠️ **Using HTTPS** _(Recommended for Intel Tiber AI Cloud)_:
+
+```bash
+git clone https://github.com/murilogustineli/pytorch-plantclef.git
+```
+
+**Using SSH**:
+
+```bash
+git clone git@github.com:murilogustineli/pytorch-plantclef.git
+```
+
+Navigate to the project directory:
+
+```bash
+cd pytorch-plantclef
+```
+
+### 2. Install `uv` (Package Manager)
+
+Install `uv` as the package manager for the project. Follow the `uv` [installation instructions](https://docs.astral.sh/uv/getting-started/installation/) for macOS, Linux, and Windows.
+
+If running on [Intel Tiber AI Cloud](https://ai.cloud.intel.com/), install `uv` as the following (also works for macOS and Linux):
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Add it to `PATH`:
+
+```bash
+source $HOME/.local/bin/env
+```
+
+Check `uv` installation:
+
+```bash
+uv --version
+```
+
+### 3. Create a Virtual Environment
 
 Create a virtual environment:
+
 ```bash
 uv venv venv
 ```
 
 Activate the virtual environment:
+
 ```bash
 source venv/bin/activate
 ```
 
-Install the pre-commit hooks for formatting code:
+### 4. Install the Project in Editable Mode with Dependencies
+
+Install the `plantclef` package in _"editable"_ mode, which means changes to the Python files will be immediately available without needing to reinstall the package.
+
+#### If running locally (macOS, Linux, Windows):
+
+Install all dependencies from `requirements.txt` to the `venv` virtual environment:
+
+```bash
+uv pip install -e .
+```
+
+#### If running on [Intel Tiber AI Cloud](https://ai.cloud.intel.com/):
+
+⚠️ **Do NOT install `torch` & `torchvision`** (Intel GPU versions are pre-installed).
+Use the ITAC-specific requirements file:
+
+```bash
+uv pip install -e .[itac]
+```
+
+**[OPTIONAL]**: Install the pre-commit hooks for formatting code:
 
 ```bash
 pre-commit install
 ```
 
-Install the requirement packages to the `venv` virtual environment:
+### 5. Download Dataset & Fine-Tuned ViT Model
 
 ```bash
-uv pip install -r requirements.txt
+bash scripts/download_data_model.sh
 ```
 
-Install the package in "editable" mode, which means changes to the Python files will be immediately available without needing to reinstall the package.
+### 6. Run tests to verify setup
+
+After downloading the data and fine-tuned model, we can test the virtual environment by running the following `pystest`:
 
 ```bash
-uv pip install -e .
+pytest -vv -s tests/test_embed.py
 ```
