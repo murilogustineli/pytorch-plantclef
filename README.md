@@ -119,6 +119,8 @@ This test ensures that:
 - The **DINOv2 model** is correctly loaded.
 - Image embeddings are generated without errors.
 
+If you're **running locally**, you should be good to go. If you're running on **Intel Tiber AI Cloud**, follow the setup below.
+
 ## Intel Tiber AI Cloud Setup
 
 ⚠️ The **Jupyter** and **terminal** environments on ITAC are **NOT** synced. This means that installing packages or setting environment variables in one will not automatically apply to the other.
