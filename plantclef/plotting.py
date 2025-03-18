@@ -161,7 +161,7 @@ def plot_image_tiles(
     df: pd.DataFrame,
     data_col: str,
     grid_size: int = 3,
-    figsize: tuple = (16, 8),
+    figsize: tuple = (15, 8),
     dpi: int = 80,
 ):
     """
