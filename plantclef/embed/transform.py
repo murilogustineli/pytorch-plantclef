@@ -1,37 +1,63 @@
 import timm
 import torch
-import numpy as np
-import pandas as pd
 import pytorch_lightning as pl
 
-from tqdm import tqdm
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 from plantclef.serde import deserialize_image
 from plantclef.model_setup import setup_fine_tuned_model
-from plantclef.config import get_device
+from plantclef.config import get_device, get_class_mappings_file
 
 
 class PlantDataset(Dataset):
     """Custom PyTorch Dataset for loading plant images from a Pandas DataFrame."""
 
-    def __init__(self, df, transform=None):
+    def __init__(
+        self,
+        df,
+        transform=None,
+        use_grid: bool = False,
+        grid_size: int = 4,
+    ):
         """
         Args:
             df (pd.DataFrame): Pandas DataFrame containing image binary data.
             transform (torchvision.transforms.Compose): Image transformations.
+            use_grid (bool): Whether to split images into a grid.
+            grid_size (int): The size of the grid to split images into.
         """
         self.df = df
         self.transform = transform
+        self.use_grid = use_grid
+        self.grid_size = grid_size
 
     def __len__(self):
         return len(self.df)
 
-    def __getitem__(self, idx):
+    def _split_into_grid(self, image):
+        w, h = image.size
+        grid_w, grid_h = w // self.grid_size, h // self.grid_size
+        images = []
+        for i in range(self.grid_size):
+            for j in range(self.grid_size):
+                left = i * grid_w
+                upper = j * grid_h
+                right = left + grid_w
+                lower = upper + grid_h
+                crop_image = image.crop((left, upper, right, lower))
+                images.append(crop_image)
+        return images
+
+    def __getitem__(self, idx) -> list:
         img_bytes = self.df.iloc[idx]["data"]
         img = deserialize_image(img_bytes)  # convert from bytes to PIL image
-        if self.transform:
-            img = self.transform(img)
-        return img
+
+        if self.use_grid:
+            img_list = self._split_into_grid(img)
+            if self.transform:
+                img_list = [self.transform(image) for image in img_list]
+            return torch.stack(img_list)  # tensor of shape (grid_size**2, C, H, W)
+
+        return self.transform(img)  # single transformed image tensor (C, H, W)
 
 
 class DINOv2LightningModel(pl.LightningModule):
@@ -39,8 +65,8 @@ class DINOv2LightningModel(pl.LightningModule):
 
     def __init__(
         self,
-        model_path=setup_fine_tuned_model(),
-        model_name="vit_base_patch14_reg4_dinov2.lvd142m",
+        model_path: str = setup_fine_tuned_model(),
+        model_name: str = "vit_base_patch14_reg4_dinov2.lvd142m",
     ):
         super().__init__()
         self.model_device = get_device()
@@ -63,6 +89,15 @@ class DINOv2LightningModel(pl.LightningModule):
         # move model to device
         self.model.to(self.model_device)
         self.model.eval()
+        # class mappings file for classification
+        self.class_mappings_file = get_class_mappings_file()
+        # load class mappings
+        self.cid_to_spid = self._load_class_mappings()
+
+    def _load_class_mappings(self):
+        with open(self.class_mappings_file, "r") as f:
+            class_index_to_class_name = {i: line.strip() for i, line in enumerate(f)}
+        return class_index_to_class_name
 
     def forward(self, batch):
         """Extract embeddings using the [CLS] token."""
@@ -70,27 +105,3 @@ class DINOv2LightningModel(pl.LightningModule):
             batch = batch.to(self.model_device)
             features = self.model.forward_features(batch)
             return features[:, 0, :]  # extract [CLS] token
-
-
-def extract_embeddings(
-    pandas_df: pd.DataFrame,
-    batch_size: int = 32,
-) -> np.ndarray:
-    """Extract embeddings for images in a Pandas DataFrame using PyTorch Lightning."""
-
-    # initialize model
-    model = DINOv2LightningModel()
-
-    # create Dataset and DataLoader
-    dataset = PlantDataset(pandas_df, model.transform)
-    dataloader = DataLoader(
-        dataset, batch_size=batch_size, shuffle=False, num_workers=4
-    )
-
-    # run inference and collect embeddings with tqdm progress bar
-    all_embeddings = []
-    for batch in tqdm(dataloader, desc="Extracting embeddings", unit="batch"):
-        embeddings = model(batch)
-        all_embeddings.append(embeddings.cpu().numpy())
-
-    return np.vstack(all_embeddings)  # combine all embeddings into a single array

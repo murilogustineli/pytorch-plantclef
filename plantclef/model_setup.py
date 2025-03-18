@@ -7,7 +7,7 @@ def get_model_dir() -> str:
     """
     Get the model directory in the plantclef shared project for the current user on PACE
     """
-    # gut current directory
+    # get root directory
     root_dir = Path(__file__).resolve().parent.parent
     # check if model directory exists, create if not
     model_dir = os.path.join(root_dir, "model")
