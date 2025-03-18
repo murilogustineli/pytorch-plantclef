@@ -130,7 +130,7 @@ To ensure proper Intel GPU (`xpu`) access, follow these steps:
 1. **Open the notebook:** Open the jupyter notebook `notebooks/setup_itac.ipynb`.
 2. **Run cells sequentially:** Go through the notebook step by step.
 3. **Restart the Kernel when required:** Running the cell `exit()` will restart the jupyter kernel to apply the installations.
-4. **Verify that the Intel GPU (`xpu`) is being used:** At the end of the notebook execution, check the PyTorch version and device are correct. The expect output if intel gpu is enabled is:
+4. **Verify that the Intel GPU (`xpu`) is being used:** At the end of the notebook execution, check the PyTorch version and device are correct. The expect output if Intel GPU is enabled is:
 
    ```
    PyTorch Version: 2.5.1+cxx11.abi
