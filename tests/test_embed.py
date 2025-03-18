@@ -4,10 +4,9 @@ import pytest
 import pandas as pd
 
 from PIL import Image
-from functools import partial
 from torch.utils.data import DataLoader
 from plantclef.embed.transform import DINOv2LightningModel, PlantDataset
-from plantclef.embed.workflow import custom_collate_fn
+from plantclef.embed.workflow import custom_collate_fn_partial
 from plantclef.model_setup import setup_fine_tuned_model
 
 
@@ -44,11 +43,6 @@ def test_plant_dataset(pandas_df, use_grid, grid_size):
         (grid_size**2, *sample_data.shape[1:]) if use_grid else sample_data.shape
     )
     assert sample_data.shape == expected_shape
-
-
-def custom_collate_fn_partial(use_grid):
-    """Returns a pickle-friendly collate function with the `use_grid` flag."""
-    return partial(custom_collate_fn, use_grid=use_grid)
 
 
 @pytest.mark.parametrize(
