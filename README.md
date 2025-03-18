@@ -119,7 +119,7 @@ This test ensures that:
 - The **DINOv2 model** is correctly loaded.
 - Image embeddings are generated without errors.
 
-If you're **running locally**, you should be good to go. If you're running on **Intel Tiber AI Cloud**, follow the setup below.
+If you're **running locally**, you should be good to go! If you're running on **Intel Tiber AI Cloud**, follow the setup below.
 
 ## Intel Tiber AI Cloud Setup
 
