@@ -78,7 +78,7 @@ def plot_images_from_binary(
     plt.show()
 
 
-def plot_images_from_embeddings(
+def plot_embeddings(
     df: pd.DataFrame,
     data_col: str,
     label_col: str,
@@ -139,4 +139,84 @@ def plot_images_from_embeddings(
         ax.set_xticks([])
         ax.set_yticks([])
     plt.tight_layout()
+    plt.show()
+
+
+def split_into_grid(image_array, grid_size: int = 3) -> list:
+    h, w, c = image_array.shape  # Extract height, width, and channels
+    grid_h, grid_w = h // grid_size, w // grid_size  # Tile size
+
+    tiles = []
+    for i in range(grid_size):
+        for j in range(grid_size):
+            top, left = i * grid_h, j * grid_w
+            bottom, right = top + grid_h, left + grid_w
+            tile = image_array[top:bottom, left:right, :]  # Slice the NumPy array
+            tiles.append(tile)
+
+    return tiles  # Returns a list of NumPy arrays
+
+
+def plot_image_tiles(
+    df: pd.DataFrame,
+    data_col: str,
+    grid_size: int = 3,
+    figsize: tuple = (16, 8),
+    dpi: int = 80,
+):
+    """
+    Display an original image and its tiles in a single figure.
+
+    :param df: DataFrame with the image data.
+    :param data_col: Name of the data column containing image bytes.
+    :param grid_size: Number of tiles per row/column (grid_size x grid_size).
+    :param crop_square: Whether to crop images to square format.
+    :param figsize: Figure size (width, height).
+    :param dpi: Dots per inch (image resolution).
+    """
+    # extract the first row from DataFrame
+    subset_df = df.head(1)
+    image_data = subset_df[data_col].iloc[0]
+    image_name = subset_df["image_name"].values[0]
+
+    # convert binary image to PIL Image
+    image = deserialize_image(image_data)
+    image = crop_image_square(image)  # Ensure a square crop
+
+    # split image into tiles
+    image_tiles = split_into_grid(image, grid_size)
+
+    # create figure with 1 row and 2 columns (original image | 3x3 grid)
+    fig, axes = plt.subplots(1, 2, figsize=figsize, dpi=dpi)
+    fig.suptitle("Original Image and Grid of Tiles", fontsize=22, weight="bold")
+
+    # plot original image on the left
+    axes_left = axes[0]
+    axes_left.imshow(image)
+    axes_left.set_title(image_name, fontsize=16)
+    axes_left.set_xticks([])
+    axes_left.set_yticks([])
+
+    # plot the grid of tiles on the right
+    gs = fig.add_gridspec(1, 2)[1]
+    grid_axes = gs.subgridspec(grid_size, grid_size)
+
+    for idx, tile in enumerate(image_tiles):
+        row, col = divmod(idx, grid_size)
+        ax = fig.add_subplot(grid_axes[row, col])
+        ax.imshow(tile)
+        ax.set_xlabel(f"Tile {idx+1}", fontsize=15)
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+    ax_right = axes[1]
+    ax_right.set_title(f"{grid_size}x{grid_size} grid of tiles", fontsize=18)
+    ax_right.set_xticks([])
+    ax_right.set_yticks([])
+    spines = ["top", "right", "bottom", "left"]
+    for spine in spines:
+        ax_right.spines[spine].set_visible(False)
+
+    plt.tight_layout()
+    plt.subplots_adjust(top=0.9)
     plt.show()
