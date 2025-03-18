@@ -29,6 +29,10 @@ namespaces = false
 # Optional dependencies
 [project.optional-dependencies]
 itac = [
+    # use Intel-specific PyTorch and torchvision versions
+    "torch==2.5.1+cxx11.abi",
+    "torchvision==0.20.1+cxx11.abi",
+
     # list all dependencies EXCEPT torch and torchvision (already included in ITAC)
     "numpy==1.26.4",
     "pandas==2.2.3",
