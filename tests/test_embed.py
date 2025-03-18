@@ -83,7 +83,15 @@ def test_finetuned_dinov2(
     for batch in dataloader:
         embeddings = model(batch)  # forward pass
 
+        if use_grid:
+            B = batch.shape[0]  # number of images in the batch
+            G = grid_size**2  # number of tiles per image
+            embeddings = embeddings.view(B, G, -1)  # flatten tiles into single tensor
+
         assert isinstance(embeddings, torch.Tensor)
         expected_shape = (grid_size**2, expected_dim) if use_grid else (1, expected_dim)
-        assert embeddings.shape == expected_shape
+        if use_grid:
+            assert embeddings[0].shape == expected_shape
+        else:
+            assert embeddings.shape == expected_shape
         assert all(isinstance(x.item(), float) for x in embeddings.flatten())

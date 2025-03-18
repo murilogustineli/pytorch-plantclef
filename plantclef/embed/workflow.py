@@ -51,6 +51,12 @@ def extract_embeddings(
     all_embeddings = []
     for batch in tqdm(dataloader, desc="Extracting embeddings", unit="batch"):
         embeddings = model(batch)
+
+        if use_grid:
+            B = batch.shape[0]  # number of images in the batch
+            G = grid_size**2  # number of tiles per image
+            embeddings = embeddings.view(B, G, -1)  # flatten tiles into single tensor
+
         all_embeddings.append(embeddings.cpu().numpy())
 
     return np.vstack(all_embeddings)  # combine all embeddings into a single array
