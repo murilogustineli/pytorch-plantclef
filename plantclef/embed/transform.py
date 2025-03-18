@@ -3,6 +3,7 @@ import torch
 import pytorch_lightning as pl
 
 from torch.utils.data import Dataset
+from torchvision.transforms import ToTensor
 from plantclef.serde import deserialize_image
 from plantclef.model_setup import setup_fine_tuned_model
 from plantclef.config import get_device, get_class_mappings_file
@@ -55,9 +56,13 @@ class PlantDataset(Dataset):
             img_list = self._split_into_grid(img)
             if self.transform:
                 img_list = [self.transform(image) for image in img_list]
-            return torch.stack(img_list)  # tensor of shape (grid_size**2, C, H, W)
-
-        return self.transform(img)  # single transformed image tensor (C, H, W)
+            else:  # no transform, shape: (grid_size**2, C, H, W)
+                img_list = [ToTensor()(image) for image in img_list]
+            return torch.stack(img_list)
+        # single image, shape: (C, H, W)
+        if self.transform:
+            return self.transform(img)  # (C, H, W)
+        return ToTensor()(img)  # (C, H, W)
 
 
 class DINOv2LightningModel(pl.LightningModule):
@@ -102,6 +107,11 @@ class DINOv2LightningModel(pl.LightningModule):
     def forward(self, batch):
         """Extract embeddings using the [CLS] token."""
         with torch.no_grad():
-            batch = batch.to(self.model_device)
+            batch = batch.to(self.model_device)  # move to device
+
+            if batch.dim() == 5:  # (B, grid_size**2, C, H, W)
+                B, G, C, H, W = batch.shape
+                batch = batch.view(B * G, C, H, W)  # (B * grid_size**2, C, H, W)
+            # forward pass
             features = self.model.forward_features(batch)
             return features[:, 0, :]  # extract [CLS] token

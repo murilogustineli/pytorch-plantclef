@@ -6,6 +6,13 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 
+def custom_collate_fn(batch, use_grid):
+    """Custom collate function to handle batched grid images properly."""
+    if use_grid:
+        return torch.stack(batch, dim=0)  # shape: (B, grid_size**2, C, H, W)
+    return torch.stack(batch)  # shape: (B, C, H, W)
+
+
 def extract_embeddings(
     pandas_df: pd.DataFrame,
     batch_size: int = 32,
@@ -31,9 +38,7 @@ def extract_embeddings(
         batch_size=batch_size,
         shuffle=False,
         num_workers=cpu_count,
-        collate_fn=lambda batch: (
-            torch.cat(batch, dim=0) if use_grid else torch.stack(batch)
-        ),
+        collate_fn=lambda batch: custom_collate_fn(batch, use_grid),
     )
 
     # run inference and collect embeddings with tqdm progress bar

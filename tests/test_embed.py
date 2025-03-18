@@ -4,8 +4,10 @@ import pytest
 import pandas as pd
 
 from PIL import Image
+from functools import partial
 from torch.utils.data import DataLoader
 from plantclef.embed.transform import DINOv2LightningModel, PlantDataset
+from plantclef.embed.workflow import custom_collate_fn
 from plantclef.model_setup import setup_fine_tuned_model
 
 
@@ -36,12 +38,17 @@ def test_plant_dataset(pandas_df, use_grid, grid_size):
         grid_size=grid_size,
     )
     assert len(dataset) == 2
-    if use_grid:
-        assert isinstance(dataset[0], list)
-        assert len(dataset[0]) == grid_size**2
-        assert isinstance(dataset[0][0], Image.Image)
-    else:  # no grid
-        assert isinstance(dataset[0], Image.Image)
+    sample_data = dataset[0]
+    assert isinstance(sample_data, torch.Tensor)
+    expected_shape = (
+        (grid_size**2, *sample_data.shape[1:]) if use_grid else sample_data.shape
+    )
+    assert sample_data.shape == expected_shape
+
+
+def custom_collate_fn_partial(use_grid):
+    """Returns a pickle-friendly collate function with the `use_grid` flag."""
+    return partial(custom_collate_fn, use_grid=use_grid)
 
 
 @pytest.mark.parametrize(
@@ -75,21 +82,14 @@ def test_finetuned_dinov2(
         batch_size=1,
         shuffle=False,
         num_workers=2,
-        collate_fn=lambda batch: (
-            torch.cat(batch, dim=0) if use_grid else torch.stack(batch)
-        ),
+        collate_fn=custom_collate_fn_partial(use_grid),  # pickle-friendly collate_fn
     )
 
     # extract embeddings
     for batch in dataloader:
         embeddings = model(batch)  # forward pass
-        assert embeddings.shape == (1, expected_dim)
-        if use_grid:
-            assert isinstance(embeddings, list)
-            assert all(isinstance(x, torch.Tensor) for x in embeddings)
-            assert all(
-                isinstance(y.item(), float) for x in embeddings for y in x.flatten()
-            )
-        else:  # no grid
-            assert isinstance(embeddings, torch.Tensor)
-            assert all(isinstance(x.item(), float) for x in embeddings.flatten())
+
+        assert isinstance(embeddings, torch.Tensor)
+        expected_shape = (grid_size**2, expected_dim) if use_grid else (1, expected_dim)
+        assert embeddings.shape == expected_shape
+        assert all(isinstance(x.item(), float) for x in embeddings.flatten())
