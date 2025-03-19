@@ -1,32 +1,9 @@
 import torch
 import pytest
 from torch.utils.data import DataLoader
-from plantclef.embed.transform import DINOv2LightningModel, PlantDataset
-from plantclef.embed.workflow import custom_collate_fn_partial
+from plantclef.torch.model import DINOv2LightningModel
+from plantclef.torch.data import PlantDataset, custom_collate_fn_partial
 from plantclef.model_setup import setup_fine_tuned_model
-
-
-@pytest.mark.parametrize(
-    "use_grid, grid_size",
-    [
-        (False, 2),  # No grid
-        (True, 2),  # Grid size 2
-    ],
-)
-def test_plant_dataset(pandas_df, use_grid, grid_size):
-    dataset = PlantDataset(
-        pandas_df,
-        transform=None,
-        use_grid=use_grid,
-        grid_size=grid_size,
-    )
-    assert len(dataset) == 2
-    sample_data = dataset[0]
-    assert isinstance(sample_data, torch.Tensor)
-    expected_shape = (
-        (grid_size**2, *sample_data.shape[1:]) if use_grid else sample_data.shape
-    )
-    assert sample_data.shape == expected_shape
 
 
 @pytest.mark.parametrize(
@@ -42,10 +19,14 @@ def test_finetuned_dinov2(
     expected_dim,
     use_grid,
     grid_size,
+    cpu_count=1,
+    batch_size=1,
+    top_k=10,
 ):
     model = DINOv2LightningModel(
         model_path=setup_fine_tuned_model(),
         model_name=model_name,
+        top_k=top_k,
     )
 
     # create PlantDataset and DataLoader
@@ -57,15 +38,14 @@ def test_finetuned_dinov2(
     )
     dataloader = DataLoader(
         dataset,
-        batch_size=1,
+        batch_size=batch_size,
         shuffle=False,
-        num_workers=2,
+        num_workers=cpu_count,
         collate_fn=custom_collate_fn_partial(use_grid),  # pickle-friendly collate_fn
     )
 
-    # extract embeddings
     for batch in dataloader:
-        embeddings = model(batch)  # forward pass
+        embeddings, logits = model(batch)  # forward pass
 
         if use_grid:
             B = batch.shape[0]  # number of images in the batch
@@ -73,9 +53,17 @@ def test_finetuned_dinov2(
             embeddings = embeddings.view(B, G, -1)  # flatten tiles into single tensor
 
         assert isinstance(embeddings, torch.Tensor)
+        assert all(isinstance(x.item(), float) for x in embeddings.flatten())
         expected_shape = (grid_size**2, expected_dim) if use_grid else (1, expected_dim)
         if use_grid:
             assert embeddings[0].shape == expected_shape
         else:
             assert embeddings.shape == expected_shape
-        assert all(isinstance(x.item(), float) for x in embeddings.flatten())
+
+        # check logits
+        assert isinstance(logits, torch.Tensor)
+        assert all(isinstance(x.item(), float) for x in logits.flatten())
+        if use_grid:
+            assert logits.shape == (grid_size**2, model.num_classes)
+        else:
+            assert logits.shape == (batch_size, model.num_classes)

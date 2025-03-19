@@ -1,10 +1,32 @@
 import torch
 import pytest
-
 from torch.utils.data import DataLoader
-from plantclef.embed.transform import DINOv2LightningModel, PlantDataset
-from plantclef.embed.workflow import custom_collate_fn_partial
+from plantclef.torch.model import DINOv2LightningModel
+from plantclef.torch.data import PlantDataset, custom_collate_fn_partial
 from plantclef.model_setup import setup_fine_tuned_model
+
+
+@pytest.mark.parametrize(
+    "use_grid, grid_size",
+    [
+        (False, 2),  # No grid
+        (True, 2),  # Grid size 2
+    ],
+)
+def test_plant_dataset(pandas_df, use_grid, grid_size):
+    dataset = PlantDataset(
+        pandas_df,
+        transform=None,
+        use_grid=use_grid,
+        grid_size=grid_size,
+    )
+    assert len(dataset) == 2
+    sample_data = dataset[0]
+    assert isinstance(sample_data, torch.Tensor)
+    expected_shape = (
+        (grid_size**2, *sample_data.shape[1:]) if use_grid else sample_data.shape
+    )
+    assert sample_data.shape == expected_shape
 
 
 @pytest.mark.parametrize(

@@ -1,12 +1,23 @@
-import timm
 import torch
 import pytorch_lightning as pl
 
-from torch.utils.data import Dataset
+from functools import partial
+from torch.utils.data import Dataset, DataLoader
 from torchvision.transforms import ToTensor
 from plantclef.serde import deserialize_image
-from plantclef.model_setup import setup_fine_tuned_model
-from plantclef.config import get_device, get_class_mappings_file
+from plantclef.torch.model import DINOv2LightningModel
+
+
+def custom_collate_fn(batch, use_grid):
+    """Custom collate function to handle batched grid images properly."""
+    if use_grid:
+        return torch.stack(batch, dim=0)  # shape: (B, grid_size**2, C, H, W)
+    return torch.stack(batch)  # shape: (B, C, H, W)
+
+
+def custom_collate_fn_partial(use_grid):
+    """Returns a pickle-friendly collate function with the `use_grid` flag."""
+    return partial(custom_collate_fn, use_grid=use_grid)
 
 
 class PlantDataset(Dataset):
@@ -67,53 +78,36 @@ class PlantDataset(Dataset):
         return ToTensor()(img)  # (C, H, W)
 
 
-class DINOv2LightningModel(pl.LightningModule):
-    """PyTorch Lightning module for extracting embeddings from a fine-tuned DINOv2 model."""
+class PlantDataModule(pl.LightningDataModule):
+    """LightningDataModule for handling dataset loading and preparation."""
 
     def __init__(
-        self,
-        model_path: str = setup_fine_tuned_model(),
-        model_name: str = "vit_base_patch14_reg4_dinov2.lvd142m",
+        self, pandas_df, batch_size=32, use_grid=False, grid_size=4, num_workers=4
     ):
         super().__init__()
-        self.model_device = get_device()
-        self.num_classes = 7806  # total plant species
+        self.pandas_df = pandas_df
+        self.batch_size = batch_size
+        self.use_grid = use_grid
+        self.grid_size = grid_size
+        self.num_workers = num_workers
 
-        # load the fine-tuned model
-        self.model = timm.create_model(
-            model_name,
-            pretrained=False,
-            num_classes=self.num_classes,
-            checkpoint_path=model_path,
+    def setup(self, stage=None):
+        """Set up dataset and transformations."""
+
+        self.model = DINOv2LightningModel()
+        self.dataset = PlantDataset(
+            self.pandas_df,
+            self.model.transform,  # Use the model's transform
+            use_grid=self.use_grid,
+            grid_size=self.grid_size,
         )
 
-        # load transform
-        self.data_config = timm.data.resolve_model_data_config(self.model)
-        self.transform = timm.data.create_transform(
-            **self.data_config, is_training=False
+    def predict_dataloader(self):
+        """Returns DataLoader for inference."""
+        return DataLoader(
+            self.dataset,
+            batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=self.num_workers,
+            collate_fn=custom_collate_fn_partial(self.use_grid),
         )
-
-        # move model to device
-        self.model.to(self.model_device)
-        self.model.eval()
-        # class mappings file for classification
-        self.class_mappings_file = get_class_mappings_file()
-        # load class mappings
-        self.cid_to_spid = self._load_class_mappings()
-
-    def _load_class_mappings(self):
-        with open(self.class_mappings_file, "r") as f:
-            class_index_to_class_name = {i: line.strip() for i, line in enumerate(f)}
-        return class_index_to_class_name
-
-    def forward(self, batch):
-        """Extract embeddings using the [CLS] token."""
-        with torch.no_grad():
-            batch = batch.to(self.model_device)  # move to device
-
-            if batch.dim() == 5:  # (B, grid_size**2, C, H, W)
-                B, G, C, H, W = batch.shape
-                batch = batch.view(B * G, C, H, W)  # (B * grid_size**2, C, H, W)
-            # forward pass
-            features = self.model.forward_features(batch)
-            return features[:, 0, :]  # extract [CLS] token

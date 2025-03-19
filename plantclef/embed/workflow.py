@@ -1,35 +1,23 @@
-import torch
 import numpy as np
 import pandas as pd
-from functools import partial
-from .transform import PlantDataset, DINOv2LightningModel
+from plantclef.torch.data import PlantDataset, custom_collate_fn_partial
+from plantclef.torch.model import DINOv2LightningModel
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 
-def custom_collate_fn(batch, use_grid):
-    """Custom collate function to handle batched grid images properly."""
-    if use_grid:
-        return torch.stack(batch, dim=0)  # shape: (B, grid_size**2, C, H, W)
-    return torch.stack(batch)  # shape: (B, C, H, W)
-
-
-def custom_collate_fn_partial(use_grid):
-    """Returns a pickle-friendly collate function with the `use_grid` flag."""
-    return partial(custom_collate_fn, use_grid=use_grid)
-
-
-def extract_embeddings(
+def inference_pipeline(
     pandas_df: pd.DataFrame,
     batch_size: int = 32,
     use_grid: bool = False,
     grid_size: int = 4,
     cpu_count: int = 4,
+    top_k: int = 10,
 ) -> np.ndarray:
-    """Extract embeddings for images in a Pandas DataFrame using PyTorch Lightning."""
+    """Pipeline to extract embeddings and top-K logits using PyTorch Lightning."""
 
     # initialize model
-    model = DINOv2LightningModel()
+    model = DINOv2LightningModel(top_k=top_k)
 
     # create Dataset
     dataset = PlantDataset(
@@ -49,8 +37,11 @@ def extract_embeddings(
 
     # run inference and collect embeddings with tqdm progress bar
     all_embeddings = []
-    for batch in tqdm(dataloader, desc="Extracting embeddings", unit="batch"):
-        embeddings = model(batch)
+    all_logits = []
+    for batch in tqdm(
+        dataloader, desc="Extracting embeddings and logits", unit="batch"
+    ):
+        embeddings, logits = model(batch)  # forward pass
 
         if use_grid:
             B = batch.shape[0]  # number of images in the batch
@@ -58,5 +49,10 @@ def extract_embeddings(
             embeddings = embeddings.view(B, G, -1)  # flatten tiles into single tensor
 
         all_embeddings.append(embeddings.cpu().numpy())
+        all_logits.append(logits.cpu().numpy())
 
-    return np.vstack(all_embeddings)  # combine all embeddings into a single array
+    # combine all embeddings into a single array
+    embeddings_stack = np.vstack(all_embeddings)
+    logits_stack = np.vstack(all_logits)
+
+    return embeddings_stack, logits_stack
