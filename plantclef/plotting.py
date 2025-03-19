@@ -193,7 +193,7 @@ def plot_image_tiles(
     # plot original image on the left
     axes_left = axes[0]
     axes_left.imshow(image)
-    axes_left.set_title(image_name, fontsize=16)
+    axes_left.set_title(image_name, fontsize=18)
     axes_left.set_xticks([])
     axes_left.set_yticks([])
 
