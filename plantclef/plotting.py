@@ -30,7 +30,7 @@ def plot_images_from_binary(
     grid_size=(3, 3),
     crop_square: bool = False,
     figsize: tuple = (12, 12),
-    dpi: int = 80,
+    dpi: int = 100,
 ):
     """
     Display images in a grid with binomial names as labels.
@@ -84,7 +84,7 @@ def plot_embeddings(
     label_col: str,
     grid_size: tuple = (3, 3),
     figsize: tuple = (12, 12),
-    dpi: int = 80,
+    dpi: int = 100,
 ):
     """
     Display images in a grid with species names as labels.
@@ -162,7 +162,7 @@ def plot_image_tiles(
     data_col: str,
     grid_size: int = 3,
     figsize: tuple = (15, 8),
-    dpi: int = 80,
+    dpi: int = 100,
 ):
     """
     Display an original image and its tiles in a single figure.
@@ -188,14 +188,17 @@ def plot_image_tiles(
 
     # create figure with 1 row and 2 columns (original image | 3x3 grid)
     fig, axes = plt.subplots(1, 2, figsize=figsize, dpi=dpi)
-    fig.suptitle("Original Image and Grid of Tiles", fontsize=22, weight="bold")
+    # fig.suptitle("Original Image and Grid of Tiles", fontsize=22, weight="bold")
 
     # plot original image on the left
     axes_left = axes[0]
     axes_left.imshow(image)
-    axes_left.set_title(image_name, fontsize=18)
+    axes_left.set_title(image_name, fontsize=20)
     axes_left.set_xticks([])
     axes_left.set_yticks([])
+    spines = ["top", "right", "bottom", "left"]
+    for spine in spines:
+        axes_left.spines[spine].set_visible(False)
 
     # plot the grid of tiles on the right
     gs = fig.add_gridspec(1, 2)[1]
@@ -208,14 +211,14 @@ def plot_image_tiles(
         ax.set_xlabel(f"Tile {idx+1}", fontsize=15)
         ax.set_xticks([])
         ax.set_yticks([])
+        for s in spines:
+            ax.spines[s].set_visible(False)
 
     ax_right = axes[1]
-    ax_right.set_title(f"{grid_size}x{grid_size} grid of tiles", fontsize=18)
+    ax_right.set_title(f"{grid_size}x{grid_size} grid of tiles", fontsize=20)
     ax_right.set_xticks([])
     ax_right.set_yticks([])
-    spines = ["top", "right", "bottom", "left"]
-    for spine in spines:
-        ax_right.spines[spine].set_visible(False)
+    ax_right.axis("off")
 
     plt.tight_layout()
     plt.subplots_adjust(top=0.9)

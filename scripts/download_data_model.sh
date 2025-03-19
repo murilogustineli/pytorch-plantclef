@@ -9,7 +9,7 @@ BASE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 # Dataset URLs and Paths
 # ==============================
 TRAIN_DATA_URL="https://drive.google.com/uc?id=1bw6OcjNaqMv62zKX2elQvVaAfHLTt3JN"
-TEST_DATA_URL="https://drive.google.com/uc?id=1eNjcza0cX-DEaNWrffOnzVtGzGgEExKQ"
+TEST_DATA_URL="https://drive.google.com/uc?id=1D4QheXF2yagLYrYvCG3aLz4YDFJsSph5"
 TRAIN_DATASET_NAME="subset_top5_train"
 TEST_DATASET_NAME="test_2025_pytorch_webinar"
 DATA_DIR="$BASE_DIR/data/parquet"
