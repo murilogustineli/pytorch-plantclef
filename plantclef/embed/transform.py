@@ -16,6 +16,7 @@ class PlantDataset(Dataset):
         self,
         df,
         transform=None,
+        col_name: str = "data",
         use_grid: bool = False,
         grid_size: int = 4,
     ):
@@ -28,6 +29,7 @@ class PlantDataset(Dataset):
         """
         self.df = df
         self.transform = transform
+        self.col_name = col_name
         self.use_grid = use_grid
         self.grid_size = grid_size
 
@@ -49,7 +51,7 @@ class PlantDataset(Dataset):
         return images
 
     def __getitem__(self, idx) -> list:
-        img_bytes = self.df.iloc[idx]["data"]
+        img_bytes = self.df.iloc[idx][self.col_name]  # column with image bytes
         img = deserialize_image(img_bytes)  # convert from bytes to PIL image
 
         if self.use_grid:
