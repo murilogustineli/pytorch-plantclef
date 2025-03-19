@@ -168,7 +168,7 @@ cython_debug/
 logs/
 
 # data files
-*parquet/
+*data/
 
 # model files
 *model/
