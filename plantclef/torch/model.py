@@ -75,7 +75,7 @@ class DINOv2LightningModel(pl.LightningModule):
                 self.cid_to_spid.get(int(top_indices[i, j].item()), "Unknown"): float(
                     top_probs[i, j].item()
                 )
-                for j in range(self.top_k_proba)
+                for j in range(self.top_k)
             }
             batch_results.append(species_probs)
 

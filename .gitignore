@@ -172,3 +172,6 @@ logs/
 
 # model files
 *model/
+
+# lightning logs
+*lightning_logs/

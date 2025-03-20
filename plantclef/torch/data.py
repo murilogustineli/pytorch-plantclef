@@ -82,7 +82,12 @@ class PlantDataModule(pl.LightningDataModule):
     """LightningDataModule for handling dataset loading and preparation."""
 
     def __init__(
-        self, pandas_df, batch_size=32, use_grid=False, grid_size=4, num_workers=4
+        self,
+        pandas_df,
+        batch_size=32,
+        use_grid=False,
+        grid_size=4,
+        num_workers=4,
     ):
         super().__init__()
         self.pandas_df = pandas_df
@@ -109,5 +114,6 @@ class PlantDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             shuffle=False,
             num_workers=self.num_workers,
+            persistent_workers=True,
             collate_fn=custom_collate_fn_partial(self.use_grid),
         )
