@@ -110,7 +110,7 @@ This script will:
 After downloading the data and fine-tuned model, we can ensure everything is working correctly by running the following `pystest`:
 
 ```bash
-pytest -vv -s tests/test_embed.py
+pytest -vv -s tests/test_model.py
 ```
 
 This test ensures that:

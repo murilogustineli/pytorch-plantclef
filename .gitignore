@@ -168,7 +168,10 @@ cython_debug/
 logs/
 
 # data files
-*subset_top5_train/
+*data/
 
 # model files
 *model/
+
+# lightning logs
+*lightning_logs/

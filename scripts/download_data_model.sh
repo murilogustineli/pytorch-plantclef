@@ -6,34 +6,60 @@ set -e # exit on error
 BASE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
 # ==============================
-# Download Dataset
+# Dataset URLs and Paths
 # ==============================
-DATASET_URL="https://drive.google.com/uc?id=1bw6OcjNaqMv62zKX2elQvVaAfHLTt3JN"
-DATASET_NAME="subset_top5_train"
-DATASET_DIR="$BASE_DIR/data/parquet"
-DATASET_ZIP="$DATASET_DIR/$DATASET_NAME.zip"
+TRAIN_DATA_URL="https://drive.google.com/uc?id=1bw6OcjNaqMv62zKX2elQvVaAfHLTt3JN"
+TEST_DATA_URL="https://drive.google.com/uc?id=1D4QheXF2yagLYrYvCG3aLz4YDFJsSph5"
+TRAIN_DATASET_NAME="subset_top5_train"
+TEST_DATASET_NAME="test_2025_pytorch_webinar"
+DATA_DIR="$BASE_DIR/data/parquet"
 
-# create dataset directory if it doesn't exist
-mkdir -p "$DATASET_DIR"
+TRAIN_DATA_ZIP="$DATA_DIR/$TRAIN_DATASET_NAME.zip"
+TEST_DATA_ZIP="$DATA_DIR/$TEST_DATASET_NAME.zip"
 
-# check if dataset is already downloaded
-if [ -d "$DATASET_DIR" ] && [ "$(ls -A "$DATASET_DIR")" ]; then
-    echo "Dataset already exists in $DATASET_DIR. Skipping download."
+TRAIN_DATA_DIR="$DATA_DIR/$TRAIN_DATASET_NAME"
+TEST_DATA_DIR="$DATA_DIR/$TEST_DATASET_NAME"
+
+# Create dataset directory if it doesn't exist
+mkdir -p "$DATA_DIR"
+
+# ==============================
+# Download and Extract Train Dataset
+# ==============================
+if [ -d "$TRAIN_DATA_DIR" ] && [ "$(ls -A "$TRAIN_DATA_DIR")" ]; then
+    echo "Train dataset already exists in $TRAIN_DATA_DIR. Skipping download."
 else
-    # download dataset
-    echo "Downloading dataset..."
-    gdown "$DATASET_URL" -O "$DATASET_ZIP"
+    echo "Downloading Train dataset..."
+    gdown "$TRAIN_DATA_URL" -O "$TRAIN_DATA_ZIP"
 
-    # unzip dataset
-    echo "Extracting dataset..."
-    unzip -q "$DATASET_ZIP" -d "$DATASET_DIR"
+    echo "Extracting Train dataset..."
+    unzip -q "$TRAIN_DATA_ZIP" -d "$DATA_DIR"
 
-    # remove zip file
-    rm "$DATASET_ZIP"
+    echo "Removing Train dataset zip..."
+    rm "$TRAIN_DATA_ZIP"
 
-    echo "Dataset path: $DATASET_DIR"
-    echo "Dataset download and extraction complete!"
+    echo "Train dataset is ready at: $TRAIN_DATA_DIR"
 fi
+
+# ==============================
+# Download and Extract Test Dataset
+# ==============================
+if [ -d "$TEST_DATA_DIR" ] && [ "$(ls -A "$TEST_DATA_DIR")" ]; then
+    echo "Test dataset already exists in $TEST_DATA_DIR. Skipping download."
+else
+    echo "Downloading Test dataset..."
+    gdown "$TEST_DATA_URL" -O "$TEST_DATA_ZIP"
+
+    echo "Extracting Test dataset..."
+    unzip -q "$TEST_DATA_ZIP" -d "$DATA_DIR"
+
+    echo "Removing Test dataset zip..."
+    rm "$TEST_DATA_ZIP"
+
+    echo "Test dataset is ready at: $TEST_DATA_DIR"
+fi
+
+echo "All datasets are ready!"
 
 # ==============================
 # Download Model
