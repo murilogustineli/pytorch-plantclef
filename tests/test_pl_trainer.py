@@ -54,17 +54,19 @@ def test_finetuned_dinov2(
     embeddings = torch.cat([batch[0] for batch in predictions], dim=0)
     logits = torch.cat([batch[1] for batch in predictions], dim=0)
 
-    # Check total number of samples matches dataset size
+    assert isinstance(embeddings, torch.Tensor)
+    assert all(isinstance(x.item(), float) for x in embeddings.flatten())
+
+    # check total number of samples matches dataset size
     assert embeddings.shape[0] == len(pandas_df)  # Ensure all samples processed
     assert logits.shape[0] == len(pandas_df)
 
-    # Ensure embedding feature dimension is correct
+    # ensure embedding feature dimension is correct
     assert embeddings.shape[1] == expected_dim
 
-    # Ensure logits have correct class dimension
+    # ensure logits have correct class dimension
     assert logits.shape[1] == model.num_classes
-    # assert isinstance(embeddings, torch.Tensor)
-    # assert all(isinstance(x.item(), float) for x in embeddings.flatten())
+
     # expected_shape = (grid_size**2, expected_dim) if use_grid else (1, expected_dim)
     # if use_grid:
     #     assert embeddings[0].shape == expected_shape
