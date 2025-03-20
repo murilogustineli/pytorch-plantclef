@@ -10,7 +10,7 @@ from plantclef.config import get_device
     "model_name, expected_dim, use_grid, grid_size",
     [
         ("vit_base_patch14_reg4_dinov2.lvd142m", 768, False, 2),  # No grid
-        # ("vit_base_patch14_reg4_dinov2.lvd142m", 768, True, 2),  # Grid size 2
+        ("vit_base_patch14_reg4_dinov2.lvd142m", 768, True, 2),  # Grid size 2
     ],
 )
 def test_finetuned_dinov2(
@@ -51,30 +51,20 @@ def test_finetuned_dinov2(
     )  # List[Tuple[embeddings, logits]]
 
     # extract embeddings and logits from the predictions list
-    embeddings = torch.cat([batch[0] for batch in predictions], dim=0)
-    logits = torch.cat([batch[1] for batch in predictions], dim=0)
+    embeddings = torch.stack([batch[0] for batch in predictions], dim=0)
+    logits = torch.stack([batch[1] for batch in predictions], dim=0)
 
     assert isinstance(embeddings, torch.Tensor)
     assert all(isinstance(x.item(), float) for x in embeddings.flatten())
 
-    # check total number of samples matches dataset size
-    assert embeddings.shape[0] == len(pandas_df)  # Ensure all samples processed
-    assert logits.shape[0] == len(pandas_df)
+    expected_shape = (grid_size**2, expected_dim) if use_grid else (1, expected_dim)
+    if use_grid:
+        assert embeddings[0].shape == expected_shape
+        assert logits[0].shape == (grid_size**2, model.num_classes)
+    else:
+        assert embeddings[0].shape == expected_shape
+        assert logits[0].shape == (batch_size, model.num_classes)
 
-    # ensure embedding feature dimension is correct
-    assert embeddings.shape[1] == expected_dim
-
-    # ensure logits have correct class dimension
-    assert logits.shape[1] == model.num_classes
-
-    # expected_shape = (grid_size**2, expected_dim) if use_grid else (1, expected_dim)
-    # if use_grid:
-    #     assert embeddings[0].shape == expected_shape
-    #     assert logits[0].shape == expected_shape
-    # else:
-    #     assert embeddings[0].shape == expected_dim
-    #     assert logits[0].shape == (batch_size, model.num_classes)
-
-    # # check logits
-    # assert isinstance(logits, torch.Tensor)
-    # assert all(isinstance(x.item(), float) for x in logits.flatten())
+    # check logits
+    assert isinstance(logits, torch.Tensor)
+    assert all(isinstance(x.item(), float) for x in logits.flatten())

@@ -98,7 +98,7 @@ def trainer_pipeline(
     predictions = trainer.predict(model, datamodule=data_module)
 
     # unpack predictions: List[Tuple[embeddings, logits]]
-    embeddings = torch.cat([batch[0] for batch in predictions], dim=0)
-    logits = torch.cat([batch[1] for batch in predictions], dim=0)
+    embeddings = torch.stack([batch[0] for batch in predictions], dim=0)
+    logits = torch.stack([batch[1] for batch in predictions], dim=0)
 
     return embeddings, logits
