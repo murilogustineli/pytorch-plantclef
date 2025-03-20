@@ -101,15 +101,19 @@ def trainer_pipeline(
     all_logits = []
     for batch in predictions:
         embed_batch, logits_batch = batch  # batch: List[Tuple[embeddings, logits]]
-        all_embeddings.append(embed_batch)
-        all_logits.append(logits_batch)
+        all_embeddings.append(embed_batch)  # keep embeddings as tensors
+        reshaped_logits = [
+            logits_batch[i : i + grid_size**2]
+            for i in range(0, len(logits_batch), grid_size**2)
+        ]
+        all_logits.extend(reshaped_logits)  # preserve batch structure
 
+    # convert embeddings to tensor
     embeddings = torch.cat(all_embeddings, dim=0)  # shape: [len(df), grid_size**2, 768]
-    logits = torch.cat(all_logits, dim=0)  # shape: [len(df), grid_size**2, num_classes]
 
     if use_grid:
         embeddings = embeddings.view(-1, grid_size**2, 768)
     else:
         embeddings = embeddings.view(-1, 1, 768)
 
-    return embeddings, logits
+    return embeddings, all_logits

@@ -69,14 +69,14 @@ class DINOv2LightningModel(pl.LightningModule):
         top_probs, top_indices = torch.topk(probabilities, k=self.top_k, dim=1)
 
         # map class indices to species names
-        batch_results = []
-        for i in range(len(batch)):
+        batch_logits = []
+        for i in range(len(logits)):
             species_probs = {
                 self.cid_to_spid.get(int(top_indices[i, j].item()), "Unknown"): float(
                     top_probs[i, j].item()
                 )
                 for j in range(self.top_k)
             }
-            batch_results.append(species_probs)
+            batch_logits.append(species_probs)
 
-        return embeddings, logits
+        return embeddings, batch_logits
