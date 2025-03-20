@@ -97,8 +97,19 @@ def trainer_pipeline(
     # run Inference
     predictions = trainer.predict(model, datamodule=data_module)
 
-    # unpack predictions: List[Tuple[embeddings, logits]]
-    embeddings = torch.stack([batch[0] for batch in predictions], dim=0)
-    logits = torch.stack([batch[1] for batch in predictions], dim=0)
+    all_embeddings = []
+    all_logits = []
+    for batch in predictions:
+        embed_batch, logits_batch = batch  # batch: List[Tuple[embeddings, logits]]
+        all_embeddings.append(embed_batch)
+        all_logits.append(logits_batch)
+
+    embeddings = torch.cat(all_embeddings, dim=0)  # shape: [len(df), grid_size**2, 768]
+    logits = torch.cat(all_logits, dim=0)  # shape: [len(df), grid_size**2, num_classes]
+
+    if use_grid:
+        embeddings = embeddings.view(-1, grid_size**2, 768)
+    else:
+        embeddings = embeddings.view(-1, 1, 768)
 
     return embeddings, logits

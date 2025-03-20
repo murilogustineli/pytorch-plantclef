@@ -170,7 +170,6 @@ def plot_image_tiles(
     :param df: DataFrame with the image data.
     :param data_col: Name of the data column containing image bytes.
     :param grid_size: Number of tiles per row/column (grid_size x grid_size).
-    :param crop_square: Whether to crop images to square format.
     :param figsize: Figure size (width, height).
     :param dpi: Dots per inch (image resolution).
     """
@@ -208,6 +207,103 @@ def plot_image_tiles(
         row, col = divmod(idx, grid_size)
         ax = fig.add_subplot(grid_axes[row, col])
         ax.imshow(tile)
+        ax.set_xlabel(f"Tile {idx+1}", fontsize=15)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        for s in spines:
+            ax.spines[s].set_visible(False)
+
+    ax_right = axes[1]
+    ax_right.set_title(f"{grid_size}x{grid_size} grid of tiles", fontsize=20)
+    ax_right.set_xticks([])
+    ax_right.set_yticks([])
+    ax_right.axis("off")
+
+    plt.tight_layout()
+    plt.subplots_adjust(top=0.9)
+    plt.show()
+
+
+def embeddings_to_image(embedding_list: list[np.array]) -> list[Image.Image]:
+    embedding_images = []
+    for embedding in embedding_list:
+        # Find the next perfect square size greater than or equal to the embedding length
+        next_square = math.ceil(math.sqrt(len(embedding))) ** 2
+        padding_size = next_square - len(embedding)
+
+        # Pad the embedding if necessary
+        if padding_size > 0:
+            embedding = np.pad(
+                embedding, (0, padding_size), "constant", constant_values=0
+            )
+
+        # Reshape the embedding to a square
+        side_length = int(math.sqrt(len(embedding)))
+        image_array = np.reshape(embedding, (side_length, side_length))
+
+        # Normalize the embedding to [0, 255] for displaying as an image
+        normalized_image = (
+            (image_array - np.min(image_array))
+            / (np.max(image_array) - np.min(image_array))
+            * 255
+        )
+        image = Image.fromarray(normalized_image).convert("L")
+        embedding_images.append(image)
+
+    return embedding_images
+
+
+def plot_embed_tiles(
+    df: pd.DataFrame,
+    data_col: str,
+    grid_size: int = 3,
+    figsize: tuple = (15, 8),
+    dpi: int = 100,
+):
+    """
+    Display an original image and its tiles in a single figure.
+
+    :param df: DataFrame with the image data.
+    :param data_col: Name of the data column containing image bytes.
+    :param grid_size: Number of tiles per row/column (grid_size x grid_size).
+    :param figsize: Figure size (width, height).
+    :param dpi: Dots per inch (image resolution).
+    """
+    # extract the first row from DataFrame
+    subset_df = df.head(1)
+    image_data = subset_df["data"].iloc[0]
+    image_name = subset_df["image_name"].values[0]
+
+    # convert binary image to PIL Image
+    image = deserialize_image(image_data)
+    image = crop_image_square(image)  # Ensure a square crop
+
+    # get the embeddings from the DataFrame
+    embed_data = df[data_col].iloc[0 : grid_size**2].tolist()
+    embed_images = embeddings_to_image(embed_data)
+
+    # create figure with 1 row and 2 columns (original image | 3x3 grid)
+    fig, axes = plt.subplots(1, 2, figsize=figsize, dpi=dpi)
+
+    # plot original image on the left
+    axes_left = axes[0]
+    axes_left.imshow(image)
+    wrapped_name = "\n".join(textwrap.wrap(image_name, width=45))
+    axes_left.set_title(wrapped_name, fontsize=20)
+    axes_left.set_xticks([])
+    axes_left.set_yticks([])
+    spines = ["top", "right", "bottom", "left"]
+    for spine in spines:
+        axes_left.spines[spine].set_visible(False)
+
+    # plot the grid of tiles on the right
+    gs = fig.add_gridspec(1, 2)[1]
+    grid_axes = gs.subgridspec(grid_size, grid_size)
+
+    for idx, tile in enumerate(embed_images):
+        row, col = divmod(idx, grid_size)
+        ax = fig.add_subplot(grid_axes[row, col])
+        ax.imshow(tile, cmap="gray")
         ax.set_xlabel(f"Tile {idx+1}", fontsize=15)
         ax.set_xticks([])
         ax.set_yticks([])
