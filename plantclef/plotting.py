@@ -111,6 +111,8 @@ def plot_embeddings(
     axes = axes.flatten() if isinstance(axes, np.ndarray) else [axes]
 
     for ax, embedding, name in zip(axes, embedding_data_list, image_names):
+        embedding = np.array(embedding).flatten()
+
         # Find the next perfect square size greater than or equal to the embedding length
         next_square = math.ceil(math.sqrt(len(embedding))) ** 2
         padding_size = next_square - len(embedding)
@@ -123,7 +125,8 @@ def plot_embeddings(
 
         # Reshape the embedding to a square
         side_length = int(math.sqrt(len(embedding)))
-        image_array = np.reshape(embedding, (side_length, side_length))
+        # image_array = np.reshape(embedding, (side_length, side_length))
+        image_array = embedding.reshape(side_length, side_length)
 
         # Normalize the embedding to [0, 255] for displaying as an image
         normalized_image = (
