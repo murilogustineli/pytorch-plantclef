@@ -190,7 +190,10 @@ def plot_image_tiles(
 
     # create figure with 1 row and 2 columns (original image | 3x3 grid)
     fig, axes = plt.subplots(1, 2, figsize=figsize, dpi=dpi)
-    # fig.suptitle("Original Image and Grid of Tiles", fontsize=22, weight="bold")
+
+    # Set main titles for left and right plots
+    fig.text(0.25, 0.97, "Image", fontsize=20, fontweight="bold", ha="center")
+    fig.text(0.75, 0.97, "Image Tiles", fontsize=20, fontweight="bold", ha="center")
 
     # plot original image on the left
     axes_left = axes[0]
@@ -288,6 +291,10 @@ def plot_embed_tiles(
     # create figure with 1 row and 2 columns (original image | 3x3 grid)
     fig, axes = plt.subplots(1, 2, figsize=figsize, dpi=dpi)
 
+    # Set main titles for left and right plots
+    fig.text(0.25, 0.97, "Image", fontsize=20, fontweight="bold", ha="center")
+    fig.text(0.75, 0.97, "Tile Embeddings", fontsize=20, fontweight="bold", ha="center")
+
     # plot original image on the left
     axes_left = axes[0]
     axes_left.imshow(image)
@@ -318,6 +325,65 @@ def plot_embed_tiles(
     ax_right.set_xticks([])
     ax_right.set_yticks([])
     ax_right.axis("off")
+
+    plt.tight_layout()
+    plt.subplots_adjust(top=0.9)
+    plt.show()
+
+
+def plot_single_image_embeddings(
+    df: pd.DataFrame,
+    num_images: int = 2,
+    figsize: tuple = (10, 12),
+    dpi: int = 100,
+):
+    """
+    Display an original image and its tiles in a single figure.
+
+    :param df: DataFrame with the image data.
+    :param data_col: Name of the data column containing image bytes.
+    :param grid_size: Number of tiles per row/column (grid_size x grid_size).
+    :param figsize: Figure size (width, height).
+    :param dpi: Dots per inch (image resolution).
+    """
+    # extract the first row from DataFrame
+    image_data = df["data"].iloc[0:num_images].to_list()
+    image_names = df["image_name"].iloc[0:num_images].to_list()
+    embed_data = df["embeddings"].iloc[0:num_images].to_list()
+
+    # Convert binary image to PIL Image
+    images = [crop_image_square(deserialize_image(img)) for img in image_data]
+
+    # Convert embeddings to images
+    embed_images = embeddings_to_image(embed_data)
+
+    # Create figure with (num_images x 2) grid (original | embeddings)
+    fig, axes = plt.subplots(num_images, 2, figsize=figsize, dpi=dpi)
+
+    if num_images == 1:
+        axes = [axes]  # Ensure axes is iterable when only one image
+
+    # Set main titles for left and right plots
+    fig.text(0.25, 0.95, "Images", fontsize=18, fontweight="bold", ha="center")
+    fig.text(0.75, 0.95, "Embeddings", fontsize=18, fontweight="bold", ha="center")
+
+    # Loop over images and embeddings
+    for i, (img, emb_img, name) in enumerate(zip(images, embed_images, image_names)):
+        # Left: Original image
+        axes[i][0].imshow(img)
+        wrapped_name = "\n".join(textwrap.wrap(name, width=25))
+        axes[i][0].set_title(wrapped_name, fontsize=15)
+        axes[i][0].set_xticks([])
+        axes[i][0].set_yticks([])
+        for spine in ["top", "right", "bottom", "left"]:
+            axes[i][0].spines[spine].set_visible(False)
+
+        # Right: Embedding visualization (grid)
+        axes[i][1].imshow(emb_img, cmap="gray")
+        axes[i][1].set_title(wrapped_name, fontsize=15)
+        axes[i][1].set_xticks([])
+        axes[i][1].set_yticks([])
+        axes[i][1].axis("off")
 
     plt.tight_layout()
     plt.subplots_adjust(top=0.9)
