@@ -65,7 +65,7 @@ def inference_pipeline(
     return embeddings_stack, logits_stack
 
 
-def trainer_pipeline(
+def pl_trainer_pipeline(
     pandas_df: pd.DataFrame,
     batch_size: int = 32,
     use_grid: bool = False,
