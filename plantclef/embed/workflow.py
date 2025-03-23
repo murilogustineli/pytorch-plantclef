@@ -69,7 +69,7 @@ def pl_trainer_pipeline(
     pandas_df: pd.DataFrame,
     batch_size: int = 32,
     use_grid: bool = False,
-    grid_size: int = 4,
+    grid_size: None = None,
     cpu_count: int = 4,
     top_k: int = 5,
 ):

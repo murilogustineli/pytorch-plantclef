@@ -21,7 +21,7 @@ def test_finetuned_dinov2(
     grid_size,
     cpu_count=1,
     batch_size=1,
-    top_k=10,
+    top_k=5,
 ):
     # initialize DataModule
     data_module = PlantDataModule(
@@ -51,8 +51,25 @@ def test_finetuned_dinov2(
     )  # List[Tuple[embeddings, logits]]
 
     # extract embeddings and logits from the predictions list
-    embeddings = torch.stack([batch[0] for batch in predictions], dim=0)
-    logits = torch.stack([batch[1] for batch in predictions], dim=0)
+    all_embeddings = []
+    all_logits = []
+    for batch in predictions:
+        embed_batch, logits_batch = batch  # batch: List[Tuple[embeddings, logits]]
+        all_embeddings.append(embed_batch)  # keep embeddings as tensors
+        reshaped_logits = [
+            logits_batch[i : i + grid_size**2]
+            for i in range(0, len(logits_batch), grid_size**2)
+        ]
+        all_logits.extend(reshaped_logits)  # preserve batch structure
+
+    # convert embeddings to tensor
+    embeddings = torch.cat(all_embeddings, dim=0)  # shape: [len(df), grid_size**2, 768]
+    logits = all_logits
+
+    if use_grid:
+        embeddings = embeddings.view(-1, grid_size**2, 768)
+    else:
+        embeddings = embeddings.view(-1, 1, 768)
 
     assert isinstance(embeddings, torch.Tensor)
     assert all(isinstance(x.item(), float) for x in embeddings.flatten())
@@ -60,11 +77,19 @@ def test_finetuned_dinov2(
     expected_shape = (grid_size**2, expected_dim) if use_grid else (1, expected_dim)
     if use_grid:
         assert embeddings[0].shape == expected_shape
-        assert logits[0].shape == (grid_size**2, model.num_classes)
     else:
         assert embeddings[0].shape == expected_shape
-        assert logits[0].shape == (batch_size, model.num_classes)
 
     # check logits
-    assert isinstance(logits, torch.Tensor)
-    assert all(isinstance(x.item(), float) for x in logits.flatten())
+    assert isinstance(logits, list)
+    assert all(isinstance(inner_list, list) for inner_list in logits)
+    assert all(isinstance(d, dict) for inner_list in logits for d in inner_list)
+    assert all(
+        len(d) == top_k for inner_list in logits for d in inner_list
+    )  # ensure each dict has top-K entries
+    assert all(
+        isinstance(val, float)
+        for inner_list in logits
+        for d in inner_list
+        for val in d.values()
+    )  # ensure values are floats
