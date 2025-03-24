@@ -44,26 +44,49 @@ def test_finetuned_dinov2(
         collate_fn=custom_collate_fn_partial(use_grid),  # pickle-friendly collate_fn
     )
 
+    # extract embeddings and logits from the predictions list
+    all_embeddings = []
+    all_logits = []
     for batch in dataloader:
-        embeddings, logits = model(batch)  # forward pass
+        embed_batch, logits_batch = model.predict_step(
+            batch, batch_idx=0
+        )  # batch: List[Tuple[embeddings, logits]]
+        all_embeddings.append(embed_batch)  # keep embeddings as tensors
+        reshaped_logits = [
+            logits_batch[i : i + grid_size**2]
+            for i in range(0, len(logits_batch), grid_size**2)
+        ]
+        all_logits.extend(reshaped_logits)  # preserve batch structure
 
-        if use_grid:
-            B = batch.shape[0]  # number of images in the batch
-            G = grid_size**2  # number of tiles per image
-            embeddings = embeddings.view(B, G, -1)  # flatten tiles into single tensor
+    # convert embeddings to tensor
+    embeddings = torch.cat(all_embeddings, dim=0)  # shape: [len(df), grid_size**2, 768]
+    logits = all_logits
+    # logits = [logits.cpu().tolist() for logits in all_logits]
 
-        assert isinstance(embeddings, torch.Tensor)
-        assert all(isinstance(x.item(), float) for x in embeddings.flatten())
-        expected_shape = (grid_size**2, expected_dim) if use_grid else (1, expected_dim)
-        if use_grid:
-            assert embeddings[0].shape == expected_shape
-        else:
-            assert embeddings.shape == expected_shape
+    if use_grid:
+        embeddings = embeddings.view(-1, grid_size**2, 768)
+    else:
+        embeddings = embeddings.view(-1, 1, 768)
 
-        # check logits
-        assert isinstance(logits, torch.Tensor)
-        assert all(isinstance(x.item(), float) for x in logits.flatten())
-        if use_grid:
-            assert logits.shape == (grid_size**2, model.num_classes)
-        else:
-            assert logits.shape == (batch_size, model.num_classes)
+    assert isinstance(embeddings, torch.Tensor)
+    assert all(isinstance(x.item(), float) for x in embeddings.flatten())
+
+    expected_shape = (grid_size**2, expected_dim) if use_grid else (1, expected_dim)
+    if use_grid:
+        assert embeddings[0].shape == expected_shape
+    else:
+        assert embeddings[0].shape == expected_shape
+
+    # check logits
+    assert isinstance(logits, list)
+    assert all(isinstance(inner_list, list) for inner_list in logits)
+    assert all(isinstance(d, dict) for inner_list in logits for d in inner_list)
+    assert all(
+        len(d) == top_k for inner_list in logits for d in inner_list
+    )  # ensure each dict has top-K entries
+    assert all(
+        isinstance(val, float)
+        for inner_list in logits
+        for d in inner_list
+        for val in d.values()
+    )  # ensure values are floats

@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 
-def inference_pipeline(
+def torch_pipeline(
     pandas_df: pd.DataFrame,
     batch_size: int = 32,
     use_grid: bool = False,
@@ -48,21 +48,24 @@ def inference_pipeline(
     for batch in tqdm(
         dataloader, desc="Extracting embeddings and logits", unit="batch"
     ):
-        embeddings, logits = model(batch)  # forward pass
+        embeddings, logits = model.predict_step(
+            batch, batch_idx=0
+        )  # batch: List[Tuple[embeddings, logits]]
+        all_embeddings.append(embeddings)  # keep embeddings as tensors
+        reshaped_logits = [
+            logits[i : i + grid_size**2] for i in range(0, len(logits), grid_size**2)
+        ]
+        all_logits.extend(reshaped_logits)  # preserve batch structure
 
-        if use_grid:
-            B = batch.shape[0]  # number of images in the batch
-            G = grid_size**2  # number of tiles per image
-            embeddings = embeddings.view(B, G, -1)  # flatten tiles into single tensor
+    # convert embeddings to tensor
+    embeddings = torch.cat(all_embeddings, dim=0)  # shape: [len(df), grid_size**2, 768]
 
-        all_embeddings.append(embeddings.cpu().numpy())
-        all_logits.append(logits.cpu().numpy())
+    if use_grid:
+        embeddings = embeddings.view(-1, grid_size**2, 768)
+    else:
+        embeddings = embeddings.view(-1, 1, 768)
 
-    # combine all embeddings into a single array
-    embeddings_stack = np.vstack(all_embeddings)
-    logits_stack = np.vstack(all_logits)
-
-    return embeddings_stack, logits_stack
+    return embeddings, all_logits
 
 
 def pl_trainer_pipeline(
