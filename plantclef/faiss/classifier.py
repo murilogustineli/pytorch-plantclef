@@ -40,5 +40,5 @@ class FaissClassifier:
         query_embeddings = torch.nn.functional.normalize(query_embeddings, p=2, dim=1)
         # perform search
         similarities, indices = self.index.search(query_embeddings.cpu().numpy(), k=k)
-        predictions = self.idx2cls[indices.flatten()]
+        predictions = self.idx2cls[indices]
         return predictions, similarities
