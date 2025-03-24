@@ -167,11 +167,11 @@ cython_debug/
 *.csv
 logs/
 
-# data files
-*data/
-
-# model files
-*model/
-
 # lightning logs
 *lightning_logs/
+
+# data and model directories
+data/
+model/
+data
+model
