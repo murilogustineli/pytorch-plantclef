@@ -5,7 +5,7 @@ import pandas as pd
 from plantclef.config import get_device
 
 
-class FaissClassifier:
+class FAISSClassifier:
     def __init__(self, train_df: pd.DataFrame):
         """
         :param train_df: DataFrame with columns ["species_id", "embeddings"]
@@ -17,7 +17,7 @@ class FaissClassifier:
         """Builds the FAISS index from the training data."""
 
         # store class labels
-        idx2cls = train_df["species_id"].values
+        idx2cls = train_df["image_name"].values
         # convert embeddings to tensor
         embs_array = np.array(train_df["embeddings"].tolist(), dtype=np.float32)
         embs = torch.tensor(embs_array, device=self.device)
