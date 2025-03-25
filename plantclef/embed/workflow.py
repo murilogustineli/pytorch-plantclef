@@ -1,5 +1,4 @@
 import torch
-import numpy as np
 import pandas as pd
 import pytorch_lightning as pl
 from plantclef.torch.data import (
@@ -17,10 +16,10 @@ def torch_pipeline(
     pandas_df: pd.DataFrame,
     batch_size: int = 32,
     use_grid: bool = False,
-    grid_size: int = 4,
-    cpu_count: int = 4,
-    top_k: int = 10,
-) -> np.ndarray:
+    grid_size: int = 1,
+    cpu_count: int = 1,
+    top_k: int = 5,
+):
     """Pipeline to extract embeddings and top-K logits using PyTorch Lightning."""
 
     # initialize model
@@ -52,10 +51,10 @@ def torch_pipeline(
             batch, batch_idx=0
         )  # batch: List[Tuple[embeddings, logits]]
         all_embeddings.append(embeddings)  # keep embeddings as tensors
-        reshaped_logits = [
+        logits = [
             logits[i : i + grid_size**2] for i in range(0, len(logits), grid_size**2)
         ]
-        all_logits.extend(reshaped_logits)  # preserve batch structure
+        all_logits.extend(logits)  # preserve batch structure
 
     # convert embeddings to tensor
     embeddings = torch.cat(all_embeddings, dim=0)  # shape: [len(df), grid_size**2, 768]
@@ -73,7 +72,7 @@ def pl_trainer_pipeline(
     batch_size: int = 32,
     use_grid: bool = False,
     grid_size: int = 1,
-    cpu_count: int = 4,
+    cpu_count: int = 1,
     top_k: int = 5,
 ):
     """Pipeline to extract embeddings and top-k logits using PyTorch Lightning."""
