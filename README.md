@@ -1,11 +1,25 @@
-# pytorch-plantclef
+# PyTorch PlantCLEF: Multi-label Plant Species Classification with DINOv2
 
 ![plantclef-2025-banner](https://www.imageclef.org/system/files/new_banner_plantclef2025.png)
 
-PyTorch webinar on using the **DINOv2** model for multi-label plant species classification.
-This project is part of the [**PlantCLEF @ LifeCLEF & CVPR-FGVC**](https://www.kaggle.com/competitions/plantclef-2025) competition on Kaggle.
+**PyTorch webinar** on using the **DINOv2** model for multi-label plant species classification in the [**PlantCLEF @ LifeCLEF & CVPR-FGVC**](https://www.kaggle.com/competitions/plantclef-2025) competition on Kaggle.
+This session will demonstrate how **self-supervised Vision Transformers (ViTs)** and **similarity search techniques** can classify plant species efficiently at scale.
 
 ![diagram](./images/pytorch-webinar-diagram.png)
+
+This webinar is made possible through the support of the [**PyTorch Foundation**](https://pytorch.org/foundation) and [**Intel AI**](https://www.intel.la/content/www/xl/es/artificial-intelligence/overview1.html).
+
+<p align="left">
+  <img src="./images/pt-dinov2-multi-label-plant-species-classification.png" height="286px">
+  <img src="./images/intel-pytorch-foundation.jpg" height="286px">
+</p>
+
+## What You’ll Learn
+
+- How to leverage **DINOv2 embeddings** for multi-label classification using **transfer learning**.
+- Efficient **feature extraction** from a subset of **1.4M+ images** using **PyTorch Lightning**.
+- Using **Faiss** for fast **nearest neighbor search** on high-dimensional embeddings.
+- Image processing techniques: **grid-based tiling** and **prediction aggregation** to handle large datasets.
 
 ## Quickstart Guide
 
