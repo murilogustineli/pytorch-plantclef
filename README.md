@@ -10,8 +10,8 @@ This session will demonstrate how **self-supervised Vision Transformers (ViTs)**
 This webinar is made possible through the support of the [**PyTorch Foundation**](https://pytorch.org/foundation) and [**Intel AI**](https://www.intel.la/content/www/xl/es/artificial-intelligence/overview1.html).
 
 <p align="left">
-  <img src="./images/pt-dinov2-multi-label-plant-species-classification.png" height="250px">
-  <img src="./images/intel-pytorch-foundation.jpg" height="250px">
+  <img src="./images/pt-dinov2-multi-label-plant-species-classification.png" height="240px">
+  <img src="./images/intel-pytorch-foundation.jpg" height="240px">
 </p>
 
 ## What You’ll Learn
