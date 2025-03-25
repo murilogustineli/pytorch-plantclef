@@ -21,6 +21,16 @@ This webinar is made possible through the support of the [**PyTorch Foundation**
 - Using **Faiss** for fast **nearest neighbor search** on high-dimensional embeddings.
 - Image processing techniques: **grid-based tiling** and **prediction aggregation** to handle large datasets.
 
+## Event Details
+
+📅 **Date:** March 27th, 12 PM PST
+
+🎤 **Speaker:** Murilo Gustineli
+
+📍 **Where:** Online Webinar
+
+👋 **Register today:** [Registration Page](https://hubs.la/Q03bRFQb0)
+
 ## Quickstart Guide
 
 ### 1. Clone the repository
